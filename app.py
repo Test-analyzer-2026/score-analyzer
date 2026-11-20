@@ -46,4 +46,135 @@ for i, subject in enumerate(subjects):
             key=f"s{i}"
         )
 
-    with 
+    with col2:
+        avg = st.number_input(
+            f"{subject} 平均点",
+            0.0,
+            100.0,
+            float(default_avgs[i]),
+            key=f"a{i}"
+        )
+
+    data.append([subject, score, avg])
+
+
+def estimate_sd(avg):
+
+    if avg >= 65:
+        return 12
+
+    elif avg >= 55:
+        return 15
+
+    elif avg >= 45:
+        return 18
+
+    else:
+        return 15
+
+
+def calculate_hensachi(score, avg, sd):
+    return round(
+        50 + 10*(score-avg)/sd,
+        1
+    )
+
+
+results = []
+
+for subject, score, avg in data:
+
+    sd = estimate_sd(avg)
+
+    hensachi = calculate_hensachi(
+        score,
+        avg,
+        sd
+    )
+
+    low = calculate_hensachi(
+        score,
+        avg,
+        sd+3
+    )
+
+    high = calculate_hensachi(
+        score,
+        avg,
+        max(8,sd-3)
+    )
+
+    results.append(
+        [
+            subject,
+            score,
+            avg,
+            hensachi,
+            low,
+            high
+        ]
+    )
+
+
+df = pd.DataFrame(
+    results,
+    columns=[
+        "科目",
+        "得点",
+        "平均点",
+        "推定偏差値",
+        "下限",
+        "上限"
+    ]
+)
+
+st.header("分析結果")
+
+st.dataframe(df)
+
+weak_subject = df.loc[
+    df["推定偏差値"].idxmin(),
+    "科目"
+]
+
+st.error(
+    f"最優先復習科目：{weak_subject}"
+)
+
+st.subheader("推定偏差値レーダーチャート")
+
+fig = go.Figure()
+
+fig.add_trace(
+    go.Scatterpolar(
+        r=df["推定偏差値"],
+        theta=df["科目"],
+        fill="toself",
+        name="推定偏差値"
+    )
+)
+
+fig.update_layout(
+    polar=dict(
+        radialaxis=dict(
+            visible=True,
+            range=[40,80]
+        )
+    ),
+    showlegend=False
+)
+
+st.plotly_chart(
+    fig,
+    use_container_width=True
+)
+
+st.subheader("推定偏差値一覧")
+
+for _, row in df.iterrows():
+
+    st.write(
+        f"{row['科目']}："
+        f"偏差値 {row['推定偏差値']} "
+        f"(推定範囲 {row['下限']} ～ {row['上限']})"
+    )

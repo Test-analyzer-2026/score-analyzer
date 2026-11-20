@@ -1,6 +1,21 @@
+import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 
-# データ入力
+st.set_page_config(
+    page_title="統計的偏差値分析アプリ",
+    layout="wide"
+)
+
+st.title("📊 定期考査 統計的偏差値＆伸びしろ分析")
+
+st.markdown(
+    """
+    平均点と自分の得点から推定偏差値を算出し、
+    復習優先順位を提案します。
+    """
+)
+
 subjects = [
     "国語総合",
     "数学Ⅱ",
@@ -11,49 +26,24 @@ subjects = [
     "物理"
 ]
 
-scores = [75, 92, 70, 78, 85, 64, 65]
-averages = [62.5, 66.6, 57.2, 51.3, 60.1, 50.3, 57.3]
+default_scores = [75,92,70,78,85,64,65]
+default_avgs = [62.5,66.6,57.2,51.3,60.1,50.3,57.3]
 
-# 仮の標準偏差推定関数
-def estimate_sd(avg):
+st.header("入力")
 
-    if 45 <= avg <= 55:
-        return 18
+data = []
 
-    elif 35 <= avg < 45:
-        return 15
+for i, subject in enumerate(subjects):
 
-    elif 55 < avg <= 65:
-        return 15
+    col1,col2 = st.columns(2)
 
-    else:
-        return 12
+    with col1:
+        score = st.number_input(
+            f"{subject} 得点",
+            0.0,
+            100.0,
+            float(default_scores[i]),
+            key=f"s{i}"
+        )
 
-# 偏差値計算
-def hensachi(score, avg, sd):
-    return round(50 + 10 * (score - avg) / sd, 1)
-
-result = []
-
-for sub, score, avg in zip(subjects, scores, averages):
-
-    sd = estimate_sd(avg)
-
-    dev = hensachi(score, avg, sd)
-
-    result.append(
-        [sub, score, avg, sd, dev]
-    )
-
-df = pd.DataFrame(
-    result,
-    columns=[
-        "科目",
-        "得点",
-        "平均点",
-        "推定標準偏差",
-        "推定偏差値"
-    ]
-)
-
-display(df)
+    with 
